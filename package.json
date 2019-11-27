@@ -1,0 +1,57 @@
+{
+  "_from": "@imagina/qblog@>=2",
+  "_id": "@imagina/qblog@2.0.4",
+  "_inBundle": false,
+  "_integrity": "sha512-zNMSBVyiVqw0bZuuRusviWrm7hF4yADARRfP10PTwEeuBE9LaUCUFfAfYoEvJUvw7136Jr0H9ogM79D1+D15Pw==",
+  "_location": "/@imagina/qblog",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "@imagina/qblog@>=2",
+    "name": "@imagina/qblog",
+    "escapedName": "@imagina%2fqblog",
+    "scope": "@imagina",
+    "rawSpec": ">=2",
+    "saveSpec": null,
+    "fetchSpec": ">=2"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@imagina/qblog/-/qblog-2.0.4.tgz",
+  "_shasum": "12c11e0577b2bca696c698c0ef45de19d26c6615",
+  "_spec": "@imagina/qblog@>=2",
+  "_where": "C:\\Users\\Imagina\\Documents\\web\\basequasar-2",
+  "author": {
+    "name": "http://imaginacolombia.com"
+  },
+  "bugs": {
+    "url": "https://github.com/imagina/qblog/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "vue-carousel": "^0.18.0",
+    "vuejs-vr": "^1.1.0"
+  },
+  "deprecated": false,
+  "description": "Package to use Iblog in Base Quasar 1.0.0",
+  "homepage": "https://github.com/imagina/qblog#readme",
+  "keywords": [
+    "quasar",
+    "laravel",
+    "asgardcms",
+    "qblog"
+  ],
+  "license": "ISC",
+  "main": "index.js",
+  "name": "@imagina/qblog",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imagina/qblog.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "2.0.4"
+}
