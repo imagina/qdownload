@@ -1,146 +1,126 @@
 <template>
-  <div id="masterIblog">
-    <!--= BANNER =-->
-    <banner-component :dataBanner="dataIblog"
-                      v-if="component.banner">
-    </banner-component>
-
-    <div class="relative-position">
-      <!--INDEX-->
-      <index-component :categories="dataIblog"
-                       v-if="component.index">
-      </index-component>
-
-      <!--SHOW-->
-      <show-component :dataPost="dataIblog"
-                      v-if="component.show">
-      </show-component>
-
-      <!--404-->
-      <not-found v-if="component.notFound"></not-found>
-
-      <!--Inner Loading-->
-      <inner-loading :visible="innerLoading" />
+  <div id="indexMasterDownload" class="relative-position">
+    <!-- BANNER -->
+    <div id="bannerIblog" v-if="downloads">
+      <div class="q-container">
+        <!--BreadCrum-->
+        <q-breadcrumbs active-color="primary" color="light" align="right">
+          <!-- Separator -->
+          <q-icon name="fas fa-angle-right" slot="separator" slot-scope="props"/>
+          <!-- Route Home -->
+          <q-breadcrumbs-el label="Inicio" :to="{name : 'app.home'}" icon="home"/>
+          <!-- To category -->
+          <q-breadcrumbs-el label="Descargas" icon="fas fa-download"/>
+        </q-breadcrumbs>
+        <!--Title-->
+        <h1 class="q-ma-none text-h5 bg-white q-pa-lg title-container text-uppercase text-grey-9">
+          <label>Descargas</label>
+        </h1>
+      </div>
+    </div>
+    <!-- Contend -->
+    <div class="q-container relative-position">
+      <div class="row">
+        <div class="col-12">
+          <q-input outlined label="Buscar Descargas" v-model="search" @input="getData">
+            <template v-slot:append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </div>
+      </div>
+      <div class="contentDescription q-col-gutter-md row q-py-lg q-px-sm" v-if="downloads">
+        <div class="col-12 col-md-4 col-lg-3" :key="key"
+             v-for="(download,key) in downloads">
+          <q-card inline style="width: 100%" flat>
+            <!--Date-->
+            <q-card-actions class="q-px-sm q-pb-md">
+              <p class="q-mb-none">
+                {{ $trd(download.createdAt) }}
+              </p>
+            </q-card-actions>
+            <q-separator class="q-ml-sm"/>
+            <q-card-section class="q-pa-sm">
+              <router-link
+                      :to="{name: 'qdownload.show',params:{category: download.category.slug, slugDownload: download.slug}}">
+                <h2 class="q-ma-none text-primary text-h6 text-weight-bold">
+                  {{download.title}}
+                </h2>
+              </router-link>
+            </q-card-section>
+            <q-card-section class="q-pa-none">
+              <p class="q-pa-sm text-justify">
+                {{download.description.substr(0,150)}}...
+              </p>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-12">
+          <q-pagination boundary-links :max-pages="3" direction-links v-if="downloads.length > 0" v-model="page" :max="metas.page.lastPage" @input="getData" />
+        </div>
+      </div>
+      <!--Not results-->
+      <not-results v-else/>
     </div>
   </div>
 </template>
 
 <script>
-  /*Component*/
-  import bannerComponent from '@imagina/qblog/_components/widgets/widget-banner'
-  import indexComponent from '@imagina/qblog/_components/index'
-  import showComponent from '@imagina/qblog/_components/show'
-  import notFound from 'src/components/404'
-  import innerLoading from 'src/components/master/innerLoading'
-
-  /*Services*/
-  import categoriesServices from '@imagina/qblog/_services/categories'
-  import postsServices from '@imagina/qblog/_services/posts'
-
   export default {
-    preFetch({store, currentRoute, previousRoute, redirect, ssrContext}) {
-      return store.dispatch('qblogMaster/BLOG_SHOW', currentRoute)
-    },
-    meta() {
-      return {
-        title: this.metaData.siteName,
-        meta: {
-          description: {name: 'description', content: this.metaData.summary},
-          //Schema.org para Google+
-          itemprop: {itemprop: "name", content: this.metaData.title},
-          itemprop1: {itemprop: "description", content: this.metaData.summary},
-          itemprop2: {itemprop: "image", content: this.metaData.image},
-          //Open Graph para Facebook
-          property: {property: "og:title", content: this.metaData.title},
-          property1: {property: "og:type", content: "article"},
-          property2: {property: "og:image", itemprop: "image", content: this.metaData.image},
-          property3: {property: "og:image:secure_url", itemprop: "image", content: this.metaData.image},
-          property4: {property: "og:url", content: this.metaData.url},
-          property5: {property: "og:description", content: this.metaData.summary},
-          property6: {property: "og:site_name", content: this.metaData.siteName},
-          property7: {property: "og:locale", content: "es_ES"},
-          //Twitter Card
-          name: {name: "twitter:card", content: "summary_large_image"},
-          name1: {name: "twitter:site", content: this.metaData.siteName},
-          name2: {name: "twitter:title", content: this.metaData.title},
-          name3: {name: "twitter:description", content: this.metaData.summary},
-          name4: {name: "twitter:creator", content: ""},
-          name5: {name: "twitter:image:,src", content: this.metaData.image},
-        },
-      }
-    },
-    components: {
-      bannerComponent,
-      indexComponent,
-      showComponent,
-      notFound,
-      innerLoading
-    },
-    watch: {
-      $route(to, from) {
-        this.innerLoading = true
-        this.$store.dispatch('qblogMaster/BLOG_SHOW', this.$route).then(response => {
-          this.dataIblog = this.$store.state.qblogMaster.dataIblog
-          this.innerLoading = false
-        })
-      },
-    },
     data() {
       return {
-        dataIblog: this.$store.state.qblogMaster.dataIblog,
+        downloads: [],
         innerLoading: false,
+        search: '',
+        page: 1,
+        metas: {},
       }
     },
     mounted() {
-      this.$nextTick(function () {})
+      this.getData()
     },
-    computed: {
-      /**
-       * Order the meta data
-       */
-      metaData() {
-        let data = this.$store.state.qblogMaster.dataIblog
-
-        return {
-          siteName: (data && data.title) ? data.title + ' | ' + env('TITLE') : 'not found',
-          title: (data && data.title) ? data.title : 'not found',
-          summary: (data && data.summary) ? data.summary : 'not found',
-          image: (data && data.mainimage) ? data.mainimage : 'not found',
-          url: data ? env('URL')+this.$route.path : 'not found'
-        }
-      },
-      /**
-       * Select Component to show according to data
-       */
-      component() {
-        let data = this.$store.state.qblogMaster.dataIblog
-        let show = {
-          notFound: false,
-          index: false,
-          show: false,
-          banner: false
-        }
-
-        if(data){
-          show.banner = true
-          // Condition for select component Index
-          if (data.children && data.children.length) {
-            show.index = true
-          }
-
-          // Condition for select component Show
-          if ((data.children && !data.children.length) || !data.children) {
-            show.show = true
-          }
-        }else{
-          show.notFound = true
-        }
-
-        return show
+    methods: {
+      async getData(){
+        await this.$store.dispatch('qcrudMaster/INDEX', {
+          indexName: `qdownload-downloads-index`,
+          apiRoute: 'apiRoutes.qdownload.downloads',
+          requestParams: {refresh: true, params: {
+            include: 'category',
+            filter: {search: this.search},
+            page: this.page, take: 12
+          }}
+        })
+        this.downloads = this.$store.state.qcrudMaster.index[`qdownload-downloads-index`].data
+        this.metas = this.$store.state.qcrudMaster.index[`qdownload-downloads-index`].meta
       }
-    },
+    }
   }
 </script>
 
 <style lang="stylus">
+  #indexMasterDownload
+    .q-card
+      .img
+        background-size cover
+        background-position center
+        background-repeat no-repeat
+        height 230px
+        width 100%
+
+      .q-separator
+        background $secondary
+        height 5px
+        width 30%
+
+    #bannerIblog
+      background-color $grey-4
+      padding 5px
+
+      .title-container
+        border-top-right-radius 50px
+        width max-content
+
+        label
+          font-weight bold !important
+          border-bottom: 5px solid $secondary
 </style>

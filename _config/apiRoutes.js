@@ -8,4 +8,6 @@ export default {
   version: moduleVersion,
   categories: `${urlBase}/categories`,
   downloads: `${urlBase}/downloads`,
+  suscriptors: `${urlBase}/suscriptors`,
+  sendSubscription: `${urlBase}/downloads/send-subscription`,
 }

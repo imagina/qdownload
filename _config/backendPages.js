@@ -8,7 +8,7 @@ export default {
     page: () => import('@imagina/qdownload/_pages/admin/downloads/index'),
     layout: () => import('@imagina/qsite/_layouts/master.vue'),
     title: 'qdownload.sidebar.adminDownloads',
-    icon: 'fas fa-newspaper',
+    icon: 'fas fa-download',
   },
   categories: {
     permission: 'idownload.categories.manage',
@@ -19,6 +19,17 @@ export default {
     page: () => import('@imagina/qdownload/_pages/admin/categories/index'),
     layout: () => import('@imagina/qsite/_layouts/master.vue'),
     title: 'qdownload.sidebar.adminCategories',
+    icon: 'fas fa-layer-group'
+  },
+  suscriptors: {
+    permission: 'idownload.suscriptors.manage',
+    activated: true,
+    authenticated: true,
+    path: '/download/suscriptors/index',
+    name: 'qdownload.admin.suscriptors',
+    page: () => import('@imagina/qdownload/_pages/admin/subscriptors/index'),
+    layout: () => import('@imagina/qsite/_layouts/master.vue'),
+    title: 'qdownload.sidebar.adminSuscriptors',
     icon: 'fas fa-layer-group'
   },
 

@@ -1,6 +1,6 @@
 <template>
-   <div id="showIblog" class="relative-position">
-      <div id="bannerIblog" v-if="post">
+   <div id="showIdownload" class="relative-position">
+      <div id="bannerIdownload" v-if="download">
          <div class="q-container">
             <!--BreadCrum-->
             <q-breadcrumbs active-color="primary" color="light" align="right">
@@ -8,41 +8,34 @@
                <q-icon name="fas fa-angle-right" slot="separator" slot-scope="props"/>
                <!-- Route Home -->
                <q-breadcrumbs-el label="Inicio" :to="{name : 'app.home'}" icon="home"/>
+               <q-breadcrumbs-el label="Descargas" :to="{name : 'qdownload.master'}" icon="fas fa-download"/>
                <!-- To category -->
-               <q-breadcrumbs-el :label="post.category.title"
-                                 :to="{name : 'qblog.index', params : {category: post.category.slug}}"/>
-               <!-- To Post -->
-               <q-breadcrumbs-el :label="post.title"/>
+               <q-breadcrumbs-el :label="download.category.title"
+                                 :to="{name : 'qdownload.index', params : {category: download.category.slug}}"/>
+               <!-- To download -->
+               <q-breadcrumbs-el :label="download.title"/>
             </q-breadcrumbs>
             <!--Title-->
             <h1 class="q-ma-none text-h5 bg-white q-pa-lg title-container text-uppercase text-grey-9">
-               <label>{{post.title}}</label>
+               <label>{{download.title}}</label>
             </h1>
          </div>
       </div>
 
       <!--content-->
-      <div class="q-container relative-position" v-if="post">
+      <div class="q-container relative-position" v-if="download">
          <div class="row q-py-xl">
-            <!--Post-->
-            <div class="post col-12 col-lg-8">
-               <!--Image-->
-               <div class="img" :style="'background-image: url('+post.mainImage.path+')'"></div>
-
+            <!--download-->
+            <div class="download col-12 col-lg-8">
                <!--Description-->
-               <div class="description q-px-sm" v-html="post.description"></div>
-
-               <!--Autor-->
-               <div class="autor q-headline">
-                  <span class="text-primary">{{post.editor.first_name+' '+post.editor.last_name}}</span>, Autor
-               </div>
+               <div class="description q-px-sm" v-html="download.description"></div>
+               <download-form :download="download" />
             </div>
 
-            <!--Other Posts-->
+            <!--Other downloads-->
             <div class="col-12 col-lg-4 desktop-only">
-               <posts-component :category-slug="$route.params.category"/>
+               <downloads-component/>
             </div>
-
             <inner-loading :visible="loading"/>
          </div>
       </div>
@@ -51,41 +44,41 @@
 
 <script>
    /*Component*/
-   import commentComponent from '@imagina/qsite/_components/master/commentsFB'
-   import postsComponent from '@imagina/qblog/_components/widgets/widget-post-blog'
+   import downloadsComponent from '@imagina/qdownload/_components/widgets/widget-download'
+   import downloadForm from '@imagina/qdownload/_components/widgets/widget-form'
 
    export default {
       preFetch({store, currentRoute, previousRoute, redirect, ssrContext}) {
          return new Promise(async resolve => {
-            //Get data post
-            let postSlug = currentRoute.params.slugPost || false
+            //Get data download
+            let downloadslug = currentRoute.params.slugDownload || false
             await store.dispatch('qcrudMaster/SHOW', {
-               indexName: `qblog-posts-${postSlug}`,
-               criteria: postSlug,
-               apiRoute: 'apiRoutes.qblog.posts',
-               requestParams: {refresh: true, params: {include: 'category,user'}}
+               indexName: `qdownload-downloads-${downloadslug}`,
+               criteria: downloadslug,
+               apiRoute: 'apiRoutes.qdownload.downloads',
+               requestParams: {refresh: true, params: {include: 'category'}}
             })
-            //Get list related posts
+            //Get list related downloads
             let categorySlug = currentRoute.params.category || false
             await store.dispatch('qcrudMaster/SHOW', {
-               indexName: `qblog-categories-${categorySlug}`,
+               indexName: `qdownload-categories-${categorySlug}`,
                criteria: categorySlug,
-               apiRoute: 'apiRoutes.qblog.categories',
+               apiRoute: 'apiRoutes.qdownload.categories',
                requestParams: {refresh: true, params: {}}
             })
             resolve(true)
          })
       },
       meta() {
-         let postSlug = this.$route.params.slugPost
-         let routetitle = postSlug || 'productos'
+         let downloadslug = this.$route.params.slugDownload
+         let routetitle = downloadslug || 'productos'
          let siteName = this.$store.getters['qsiteSettings/getSettingValueByName']('core::site-name')
          let siteDescription = this.$store.getters['qsiteSettings/getSettingValueByName']('core::site-description')
          //Set category data
-         let post = this.$store.state.qcrudMaster.show[`qblog-posts-${postSlug}`].data
-         if (post) {
-            routetitle = post.title
-            siteDescription = post.summary
+         let download = this.$store.state.qcrudMaster.show[`qdownload-downloads-${downloadslug}`].data
+         if (download) {
+            routetitle = download.title
+            siteDescription = download.summary
          }
          return {
             title: `${routetitle.charAt(0).toUpperCase() + routetitle.slice(1)} | ${siteName}`,
@@ -95,8 +88,8 @@
          }
       },
       components: {
-         commentComponent,
-         postsComponent
+         downloadsComponent,
+         downloadForm,
       },
       watch: {
          '$route.params'() {
@@ -105,27 +98,26 @@
       },
       data() {
          return {
-            post: this.$store.state.qcrudMaster.show[`qblog-posts-${this.$route.params.slugPost}`].data,
             loading: false
          }
       },
       computed: {
-         post() {
-            let postSlug = this.$route.params.slugPost
-            let post = this.$store.state.qcrudMaster.show[`qblog-posts-${postSlug}`]
-            return post.data || false
+         download() {
+            let downloadslug = this.$route.params.slugDownload
+            let download = this.$store.state.qcrudMaster.show[`qdownload-downloads-${downloadslug}`]
+            return download.data || false
          }
       },
       methods: {
          async getData() {
             this.loading = true
 
-            let postSlug = this.$clone(this.$route.params.slugPost)
+            let downloadslug = this.$clone(this.$route.params.slugDownload)
             await this.$store.dispatch('qcrudMaster/SHOW', {
-               indexName: `qblog-posts-${postSlug}`,
-               criteria: postSlug,
-               apiRoute: 'apiRoutes.qblog.posts',
-               requestParams: {refresh: true, params: {include: 'categories,user'}}
+               indexName: `qdownload-downloads-${downloadslug}`,
+               criteria: downloadslug,
+               apiRoute: 'apiRoutes.qdownload.downloads',
+               requestParams: {refresh: true, params: {include: 'category'}}
             })
             this.loading = false
          },
@@ -134,8 +126,8 @@
 </script>
 
 <style lang="stylus">
-   #showIblog
-      .post
+   #showIdownload
+      .download
          .title
             font-size 34px
             color $dark
@@ -178,7 +170,7 @@
       iframe
          width 100% !important
 
-      #bannerIblog
+      #bannerIdownload
          background-color $grey-4
          padding 5px
 

@@ -8,6 +8,7 @@ export default [
     children: [
       pages.qdownload.downloads, // downloads setup
       pages.qdownload.categories, // categories setup
+      pages.qdownload.suscriptors, // subscriptors setup
     ]
   },
 ]

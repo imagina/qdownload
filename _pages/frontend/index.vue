@@ -9,8 +9,9 @@
                <q-icon name="fas fa-angle-right" slot="separator" slot-scope="props"/>
                <!-- Route Home -->
                <q-breadcrumbs-el label="Inicio" :to="{name : 'app.home'}" icon="home"/>
+               <q-breadcrumbs-el label="Descargas" :to="{name : 'qdownload.master'}" icon="fas fa-download"/>
                <!-- To category -->
-               <q-breadcrumbs-el :label="$route.params.category.split('-').join(' ')"/>
+               <q-breadcrumbs-el :label="category.title"/>
             </q-breadcrumbs>
             <!--Title-->
             <h1 class="q-ma-none text-h5 bg-white q-pa-lg title-container text-uppercase text-grey-9">
@@ -18,43 +19,38 @@
             </h1>
          </div>
       </div>
-<pre>
-
-</pre>
       <!-- Contend -->
       <div class="q-container relative-position">
-         <div class="contentDescription q-col-gutter-md row q-py-lg q-px-sm" v-if="category && category.posts">
+         <div class="contentDescription q-col-gutter-md row q-py-lg q-px-sm" v-if="category && downloads">
             <div class="col-12 col-md-4 col-lg-3" :key="key"
-                 v-for="(post,key) in category.posts">
+                 v-for="(download,key) in downloads">
                <q-card inline style="width: 100%" flat>
-                  <!--Media-->
-                  <router-link :to="{name: 'qblog.show',params:{category: post.category.slug, slugPost: post.slug}}">
-                     <div class="img" :style="'background-image: url('+post.mainImage.path+')'"></div>
-                  </router-link>
                   <!--Date-->
                   <q-card-actions class="q-px-sm q-pb-md">
                      <p class="q-mb-none">
-                        {{ $trd(post.createdAt) }}
+                        {{ $trd(download.createdAt) }}
                      </p>
                   </q-card-actions>
                   <q-separator class="q-ml-sm"/>
                   <q-card-section class="q-pa-sm">
                      <router-link
-                             :to="{name: 'qblog.show',params:{category: post.category.slug, slugPost: post.slug}}">
+                             :to="{name: 'qdownload.show',params:{category: download.category.slug, slugDownload: download.slug}}">
                         <h2 class="q-ma-none text-primary text-h6 text-weight-bold">
-                           {{post.title}}
+                           {{download.title}}
                         </h2>
                      </router-link>
                   </q-card-section>
                   <q-card-section class="q-pa-none">
                      <p class="q-pa-sm text-justify">
-                        {{post.summary}}
+                        {{download.description.substr(0,150)}}...
                      </p>
                   </q-card-section>
                </q-card>
             </div>
+            <div class="col-12">
+               <q-pagination boundary-links :max-pages="3" direction-links v-if="downloads.length > 0" v-model="page" :max="metas.page.lastPage" @input="getData" />
+            </div>
          </div>
-
          <!--Not results-->
          <not-results v-else/>
       </div>
@@ -63,29 +59,42 @@
 
 <script>
    export default {
-      preFetch({store, currentRoute, previousRoute, redirect, ssrContext}) {
-         return new Promise(async resolve => {
-            let category = currentRoute.params.category || false
-            await store.dispatch('qcrudMaster/SHOW', {
-               indexName: `qblog-categories-${category}`,
+      methods:{
+         async getData(){
+            let category = this.$route.params.category
+            await this.$store.dispatch('qcrudMaster/SHOW', {
+               indexName: `qdownload-categories-${category}`,
                criteria: category,
-               apiRoute: 'apiRoutes.qblog.categories',
-               requestParams: {refresh: true, params: {include: 'posts'}}
+               apiRoute: 'apiRoutes.qdownload.categories',
+               requestParams: {refresh: true, params: {filter: {field: 'slug'}}}
             })
-            resolve(true)
-         })
+            this.category = this.$store.state.qcrudMaster.show[`qdownload-categories-${category}`].data
+            await this.$store.dispatch('qcrudMaster/INDEX', {
+               indexName: `qdownload-downloads-${category}`,
+               apiRoute: 'apiRoutes.qdownload.downloads',
+               requestParams: {refresh: true, params: {
+                     include: 'category',
+                     filter: {category: this.category.id},
+                     page: this.page, take: 12
+                  }}
+            })
+            this.downloads = this.$store.state.qcrudMaster.index[`qdownload-downloads-${category}`].data
+            this.metas = this.$store.state.qcrudMaster.index[`qdownload-downloads-${category}`].meta
+         }
+      },
+      mounted(){
+         this.getData()
       },
       meta() {
-
-         let routetitle = this.$route.params.category || 'productos'
+         let routetitle = this.$route.params.category || 'descargas'
          let siteName = this.$store.getters['qsiteSettings/getSettingValueByName']('core::site-name')
          let siteDescription = this.$store.getters['qsiteSettings/getSettingValueByName']('core::site-description')
          let iconHref = this.$store.getters['qsiteSettings/getSettingMediaByName']('isite::favicon').path
          //Set category data
-         let category = this.$store.state.qcrudMaster.show[`qblog-categories-${routetitle}`].data
+         let category = this.category
          if (category) {
             routetitle = category.title
-            siteDescription = category.summary
+            siteDescription = category.metaDescription
          }
          return {
             title: `${routetitle.charAt(0).toUpperCase() + routetitle.slice(1)} | ${siteName}`,
@@ -96,9 +105,12 @@
       },
       data() {
          return {
-            category: this.$store.state.qcrudMaster.show[`qblog-categories-${this.$route.params.category}`].data,
+            category: {},
+            downloads: [],
+            page: 1,
+            metas: {},
          }
-      }
+      },
    }
 </script>
 
