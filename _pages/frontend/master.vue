@@ -61,6 +61,7 @@
       </div>
       <!--Not results-->
       <not-results v-else/>
+      <inner-loading :visible="loading"/>
     </div>
   </div>
 </template>
@@ -74,6 +75,7 @@
         search: '',
         page: 1,
         metas: {},
+        loading: false,
       }
     },
     mounted() {
@@ -81,6 +83,7 @@
     },
     methods: {
       async getData(){
+        this.loading = true
         await this.$store.dispatch('qcrudMaster/INDEX', {
           indexName: `qdownload-downloads-index`,
           apiRoute: 'apiRoutes.qdownload.downloads',
@@ -92,6 +95,7 @@
         })
         this.downloads = this.$store.state.qcrudMaster.index[`qdownload-downloads-index`].data
         this.metas = this.$store.state.qcrudMaster.index[`qdownload-downloads-index`].meta
+        this.loading = false
       }
     }
   }

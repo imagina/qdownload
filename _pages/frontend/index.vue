@@ -53,6 +53,7 @@
          </div>
          <!--Not results-->
          <not-results v-else/>
+         <inner-loading :visible="loading"/>
       </div>
    </div>
 </template>
@@ -61,6 +62,7 @@
    export default {
       methods:{
          async getData(){
+            this.loading = true
             let category = this.$route.params.category
             await this.$store.dispatch('qcrudMaster/SHOW', {
                indexName: `qdownload-categories-${category}`,
@@ -80,6 +82,7 @@
             })
             this.downloads = this.$store.state.qcrudMaster.index[`qdownload-downloads-${category}`].data
             this.metas = this.$store.state.qcrudMaster.index[`qdownload-downloads-${category}`].meta
+            this.loading = false
          }
       },
       mounted(){
@@ -109,6 +112,7 @@
             downloads: [],
             page: 1,
             metas: {},
+            loading: false
          }
       },
    }

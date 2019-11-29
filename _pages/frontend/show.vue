@@ -111,7 +111,6 @@
       methods: {
          async getData() {
             this.loading = true
-
             let downloadslug = this.$clone(this.$route.params.slugDownload)
             await this.$store.dispatch('qcrudMaster/SHOW', {
                indexName: `qdownload-downloads-${downloadslug}`,
